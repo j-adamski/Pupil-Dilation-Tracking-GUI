@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QIcon
 import time
 import numpy as np
-
+import os
 
     
 def openFile():   
@@ -27,10 +27,7 @@ def openFile():
 
 
 def splitVideo(vidFileName, imageListInput, folderName):
-    import os
-    
-    folder = folderName
-    os.mkdir(folder)
+    folder = folderName    
     vidcap = cv2.VideoCapture(str(vidFileName))
     success,image = vidcap.read()
     framecount = 0
@@ -41,3 +38,9 @@ def splitVideo(vidFileName, imageListInput, folderName):
             cv2.imwrite(os.path.join(folder,"frame{:d}.jpg".format(framecount)), image)     # save frame as JPEG file
             framecount += 1
             print("{} images are extacted in {}.".format(framecount,folder))
+            
+            
+
+    
+    
+            
