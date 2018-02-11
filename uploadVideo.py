@@ -15,7 +15,6 @@ from PyQt5.QtGui import QIcon
 import time
 import numpy as np
 import os
-
     
 def openFile():   
     options = QFileDialog.Options()
@@ -25,19 +24,19 @@ def openFile():
         print(fileName)
     return fileName
 
-
 def splitVideo(vidFileName, imageListInput, folderName):
+    framecount = 1
     folder = folderName    
     vidcap = cv2.VideoCapture(str(vidFileName))
     success,image = vidcap.read()
-    framecount = 0
     success = True
     while success:
             success,image = vidcap.read()
             print ('Read a new frame: '), success
             cv2.imwrite(os.path.join(folder,"frame{:d}.jpg".format(framecount)), image)     # save frame as JPEG file
-            framecount += 1
             print("{} images are extacted in {}.".format(framecount,folder))
+            framecount += 1
+            
             
             
 
