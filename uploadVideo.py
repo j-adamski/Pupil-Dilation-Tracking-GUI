@@ -25,7 +25,7 @@ def openFile():
     return fileName
 
 def splitVideo(vidFileName, imageListInput, folderName):
-    framecount = 1
+    framecount = 1 
     folder = folderName    
     vidcap = cv2.VideoCapture(str(vidFileName))
     success,image = vidcap.read()
@@ -36,6 +36,9 @@ def splitVideo(vidFileName, imageListInput, folderName):
             cv2.imwrite(os.path.join(folder,"frame{:d}.jpg".format(framecount)), image)     # save frame as JPEG file
             print("{} images are extacted in {}.".format(framecount,folder))
             framecount += 1
+            
+        
+    #Note:last frame come out as NULL image - so it need to be ignored
             
             
             

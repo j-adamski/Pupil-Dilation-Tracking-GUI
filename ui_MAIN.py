@@ -14,11 +14,13 @@ from PIL import Image
 from numpy import *
 import numpy
 import math
-count = 0
+count = 1
 frames= 0
-image_list = []
-coordinates = []
-diameter_data = []
+image_list = [] #stores paths of all frames extracted from video
+coordinates = [] #array stores coordinates during double clicks to draw ROI
+diameter_data = [] #array that contains ROI diameters
+global cir #circle ROI
+added = False #True if ROI object added to viewBox
 
 
 class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -32,7 +34,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.actionUpload_new.triggered.connect(self.openVidFile) # connecting upload button to openVideoFile function
         self.horizontalSlider.sliderMoved.connect(self.sliderMoved) # when slider is moved, it will trigger sliderMoved function
         self.graphicsView.scene().sigMouseClicked.connect(self.onClick) # Connect onClick function to mouse click
-        self.checkBox_StoreData.stateChanged.connect(self.saveData)
+        self.checkBox_StoreData.stateChanged.connect(self.saveData) #Connects checkbox to saveData function
         
     @pyqtSlot()
     def on_clickLeft(self): 
@@ -48,6 +50,8 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.graphicsView.addItem(img_arr)
                 self.graphicsView.disableAutoRange('xy')
                 self.horizontalSlider.setSliderPosition(count)
+                if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
+                    self.checkBox_StoreData.setChecked(False)
                 
     def on_clickRight(self):
         global count
@@ -62,6 +66,8 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.graphicsView.addItem(img_arr)
                 self.graphicsView.disableAutoRange('xy')
                 self.horizontalSlider.setSliderPosition(count)
+                if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
+                    self.checkBox_StoreData.setChecked(False)
                 
     def sliderMoved(self, val): 
         global count
@@ -71,7 +77,9 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             arr = array(img)
             arr = np.rot90(arr, -1)
             img_arr = pg.ImageItem(arr)
-            self.graphicsView.addItem(img_arr)         
+            self.graphicsView.addItem(img_arr)   
+            if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
+                    self.checkBox_StoreData.setChecked(False)
             
         except IndexError:
             print ("Error: No image at index"), val
@@ -92,10 +100,13 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.graphicsView.addItem(img_arr)   
                 self.horizontalSlider.setSliderPosition(count)
                 print ("viewing frame " + str(count))
+                if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
+                    self.checkBox_StoreData.setChecked(False)
 
         elif key == Qt.Key_D:
             if count < len(image_list)-1:
                 count = count + 1
+                count2 =count
                 img = Image.open(image_list[count])
                 arr = array(img)
                 arr = np.rot90(arr, -1)
@@ -103,12 +114,13 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.graphicsView.addItem(img_arr)   
                 self.horizontalSlider.setSliderPosition(count)
                 print ("viewing frame ", str(count))
-
+                if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
+                    self.checkBox_StoreData.setChecked(False)
+                
+                
         elif key == Qt.Key_Escape: #if ESC key is pressed, program close
             self.close()    
-        
-    def getFrame(self , event): # function prints out current frame number that is being viewed
-        print("Currently viewing image:", image_list[count], framecount)
+    
         
     def openVidFile(self):
         fileName = openFile() #openFile() opens file browser and returns name of selected video file
@@ -121,8 +133,11 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             
         self.horizontalSlider.setRange(0,len(image_list)-1)    
         
+        
     def onClick(self,ev):
         global coordinates
+        global cir
+        global added
         cor = img_arr.mapFromScene(ev.scenePos()) #maps coordinate from image pixels
         x = cor.x()
         y = cor.y()
@@ -138,18 +153,40 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             d = 2*np.sqrt((x1-x2)**2 + (y1-y2)**2)   #diameter
             LLC = (x1 - (d/2), (y1 - (d/2))) # lower left corner of bounding box
             cir = pg.CircleROI(LLC, [d,d], pen=(4,8)) #blue
+            print("CIR DIAMETER:", d)
             self.gv.addItem(cir)
-            # print(cir2.saveState()) --possibly use. Returns the angle, size, and pos.
-            coordinates[:] = []   #resets array - allows you to draw several circles in one session (just for testing purposes for now)
+            added = True
+            # coordinates[:] = []   #resets array - allows you to draw several circles in one session (just for testing purposes for now) 
 
-    def delROI(self):
-        global diameter_data
-        return 0
-
-    def saveData(self, ev):
-        return 0 
-        #to do        
+    def saveData(self,ev):
+        global added
+        #TO DO: add unique range based on # of image frames. Left like this for now for testing purposes
+        for x in range(0,737): 
+            diameter_data.append(0)
         
+        #If checkbox is checked, save the data
+        if self.checkBox_StoreData.isChecked():
+            if added == False:
+                print("No ROI on screen.")
+            else:
+                d = cir.size() #function to get width and height, returned as tuple
+                d = d[1] #since width = height, we just need to store one of the numbers
+                diameter_data[count-1] = d
+                print(diameter_data)                   
+                print("data added at count =", count)
+            
+        else:
+            ##delete data
+            diameter_data[count-1] = 0
+            #print("current data in", count, "in array:", diameter_data[count])
+            print(diameter_data)
+            print("data deleted at count =", count)
+        
+    def delROI(self, event):
+        global diameter_data 
+        if event.key() == Qt.Key_Delete:
+            self.gv.removeItem(cir)
+            
 
 def main():
     app = QtWidgets.QApplication(sys.argv)  # A new instance of QApplication
