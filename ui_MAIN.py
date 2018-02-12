@@ -19,6 +19,8 @@ frames= 0
 image_list = [] #stores paths of all frames extracted from video
 coordinates = [] #array stores coordinates during double clicks to draw ROI
 diameter_data = [] #array that contains ROI diameters
+for x in range(0,15):    #TO DO: add unique range based on # of image frames. Left like this for now for testing purposes
+    diameter_data.append(0)
 global cir #circle ROI
 added = False #True if ROI object added to viewBox
 
@@ -68,6 +70,8 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.horizontalSlider.setSliderPosition(count)
                 if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
                     self.checkBox_StoreData.setChecked(False)
+                elif(self.checkBox_StoreData.isChecked() == False and diameter_data[count-1] != 0):
+                    self.checkBox_StoreData.setChecked(True)
                 
     def sliderMoved(self, val): 
         global count
@@ -79,7 +83,9 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             img_arr = pg.ImageItem(arr)
             self.graphicsView.addItem(img_arr)   
             if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
-                    self.checkBox_StoreData.setChecked(False)
+                self.checkBox_StoreData.setChecked(False)
+            elif(self.checkBox_StoreData.isChecked() == False and diameter_data[count-1] != 0):
+                self.checkBox_StoreData.setChecked(True)
             
         except IndexError:
             print ("Error: No image at index"), val
@@ -100,8 +106,12 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.graphicsView.addItem(img_arr)   
                 self.horizontalSlider.setSliderPosition(count)
                 print ("viewing frame " + str(count))
+                print("count", count)
+                print(len(diameter_data))
                 if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
                     self.checkBox_StoreData.setChecked(False)
+                elif(self.checkBox_StoreData.isChecked() == False and diameter_data[count-1] != 0):
+                    self.checkBox_StoreData.setChecked(True)
 
         elif key == Qt.Key_D:
             if count < len(image_list)-1:
@@ -114,8 +124,12 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.graphicsView.addItem(img_arr)   
                 self.horizontalSlider.setSliderPosition(count)
                 print ("viewing frame ", str(count))
+                print("count", count)
+                print(len(diameter_data))
                 if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
                     self.checkBox_StoreData.setChecked(False)
+                elif(self.checkBox_StoreData.isChecked() == False and diameter_data[count -1] != 0):
+                    self.checkBox_StoreData.setChecked(True)                
                 
                 
         elif key == Qt.Key_Escape: #if ESC key is pressed, program close
@@ -160,10 +174,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def saveData(self,ev):
         global added
-        #TO DO: add unique range based on # of image frames. Left like this for now for testing purposes
-        for x in range(0,737): 
-            diameter_data.append(0)
-        
+       
         #If checkbox is checked, save the data
         if self.checkBox_StoreData.isChecked():
             if added == False:
@@ -184,7 +195,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
     def delROI(self, event):
         global diameter_data 
-        if event.key() == Qt.Key_Delete:
+        if event.key() == Qt.Key_Delete: #if del key is pressed, ROI is removed. #STILL have to manually remove data though. #TO DO
             self.gv.removeItem(cir)
             
 
