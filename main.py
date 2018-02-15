@@ -97,8 +97,6 @@ class Ui_MainWindow(object):
         
     
         self.graphicsView = PlotWidget(self.tab_FrameViewer)
-        
-        
         self.graphicsView.setObjectName("graphicsView")
         self.graphicsView.setAspectLocked(True) #keeps aspect locked for imported video frames, otherwise it stretches everything out.        
         
@@ -110,8 +108,11 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.tab_Data)
         self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.graphicsView_Plot = QtWidgets.QGraphicsView(self.tab_Data)
+        
+        #self.graphicsView_Plot = QtWidgets.QGraphicsView(self.tab_Data)
+        self.graphicsView_Plot = PlotWidget(self.tab_Data)
         self.graphicsView_Plot.setObjectName("graphicsView_Plot")
+        
         #sizePolicy.setHeightForWidth(self.graphicsView_Plot.sizeAdjustPolicy())        
         self.horizontalLayout_2.addWidget(self.graphicsView_Plot)
         self.dataDisplay = QtWidgets.QTextBrowser(self.tab_Data)
@@ -195,8 +196,8 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.video_title.setText(_translate("MainWindow", "VIDEO TITLE"))
-        self.label_frameNum.setText(_translate("MainWindow", "FRAME_NUM"))
+        self.video_title.setText(_translate("MainWindow", "No video uploaded"))
+        self.label_frameNum.setText(_translate("MainWindow", "No frames to display"))
         self.L_button.setText(_translate("MainWindow", "🡰"))
         self.R_button.setText(_translate("MainWindow", "🡲"))
         self.checkBox_StoreData.setText(_translate("MainWindow", "Store data"))
