@@ -48,109 +48,38 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @pyqtSlot()
     def on_clickLeft(self): 
         global count
-        global image_list
-        global img_arr
         if count > 0:
                 count= count - 1              
-                img = Image.open(image_list[count])
-                arr = array(img)
-                arr = np.rot90(arr, -1)
-                img_arr = pg.ImageItem(arr)
-                self.graphicsView.addItem(img_arr)
-                self.graphicsView.disableAutoRange('xy')
-                self.horizontalSlider.setSliderPosition(count)
-                self.label_frameNum.setText("Frame " + str(count))      
-                if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
-                    self.checkBox_StoreData.setChecked(False)
+        self.update()
                 
     def on_clickRight(self):
         global count
-        global image_list
-        global img_arr
         if count < len(image_list)-1:
                 count = count + 1
-                img = Image.open(image_list[count])
-                arr = array(img)
-                arr = np.rot90(arr, -1)
-                img_arr = pg.ImageItem(arr)
-                self.graphicsView.addItem(img_arr)
-                self.graphicsView.disableAutoRange('xy')
-                self.horizontalSlider.setSliderPosition(count)
-                self.label_frameNum.setText("Frame " + str(count))
-                #self.label_frameNum.setText("Frame", count)
-                if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
-                    self.checkBox_StoreData.setChecked(False)
-                elif(self.checkBox_StoreData.isChecked() == False and diameter_data[count-1] != 0):
-                    self.checkBox_StoreData.setChecked(True)
+        self.update()
                 
     def sliderMoved(self, val): 
         global count
-        try:
-            count = val          
-            img = Image.open(image_list[count])
-            arr = array(img)
-            arr = np.rot90(arr, -1)
-            img_arr = pg.ImageItem(arr)
-            self.graphicsView.addItem(img_arr)  
-            self.label_frameNum.setText("Frame " + str(count))
-            if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
-                self.checkBox_StoreData.setChecked(False)
-            elif(self.checkBox_StoreData.isChecked() == False and diameter_data[count-1] != 0):
-                self.checkBox_StoreData.setChecked(True)
-            
-        except IndexError:
-            print ("Error: No image at index"), val
-            
-            
+        count = val
+        self.update()
+        
     def keyPressEvent(self, event):
         global count
-        global image_list
-        global img_arr
         key = event.key()
         if key == Qt.Key_A:
             if count > 0:
                 count= count - 1 
-                img = Image.open(image_list[count])
-                arr = array(img)
-                arr = np.rot90(arr, -1)
-                img_arr = pg.ImageItem(arr)
-                self.graphicsView.addItem(img_arr)  
-                self.label_frameNum.setText("Frame " + str(count))
-                self.horizontalSlider.setSliderPosition(count)
-                print ("viewing frame " + str(count))
-                print("count", count)
-                print(len(diameter_data))
-                if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
-                    self.checkBox_StoreData.setChecked(False)
-                elif(self.checkBox_StoreData.isChecked() == False and diameter_data[count-1] != 0):
-                    self.checkBox_StoreData.setChecked(True)
+                self.update()
 
         elif key == Qt.Key_D:
             if count < len(image_list)-1:
                 count = count + 1
-                count2 =count
-                img = Image.open(image_list[count])
-                arr = array(img)
-                arr = np.rot90(arr, -1)
-                img_arr = pg.ImageItem(arr)
-                self.graphicsView.addItem(img_arr)
-                self.label_frameNum.setText("Frame " + str(count))
-                self.horizontalSlider.setSliderPosition(count)
-                print ("viewing frame ", str(count))
-                print("count", count)
-                print(len(diameter_data))
-                if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
-                    self.checkBox_StoreData.setChecked(False)
-                elif(self.checkBox_StoreData.isChecked() == False and diameter_data[count -1] != 0):
-                    self.checkBox_StoreData.setChecked(True)    
                 self.plot()
-                    
-                
+                self.update()
+                            
         elif key == Qt.Key_Escape: #if ESC key is pressed, program close
             self.close()    
             
-            
-        
     def openVidFile(self):
         fileName = openFile() #openFile() opens file browser and returns name of selected video file
         directory = str(QFileDialog.getExistingDirectory(self, "Select Folder to Store Frames")) # File dialog opens for user to create/selet a folder to store the frames extracted from video
@@ -162,8 +91,6 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for x in range(1, 738):
             image_list.append(directory + "/frame" + str(x) + ".jpg")
             
-            
-            
         self.horizontalSlider.setRange(0,len(image_list)-1)
         self.video_title.setText(fileName)
 
@@ -172,6 +99,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         global coordinates
         global cir
         global added
+        global img_arr
         cor = img_arr.mapFromScene(ev.scenePos()) #maps coordinate from image pixels
         x = cor.x()
         y = cor.y()
@@ -253,6 +181,25 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             writer = csv.writer(csvfile, lineterminator = '\n', delimiter=' ')
             for num in diameter_data:
                 writer.writerow([num])
+                
+                
+    def update(self):
+        global img_arr
+        img = Image.open(image_list[count])  #
+        arr = array(img)
+        arr = np.rot90(arr, -1)
+        img_arr = pg.ImageItem(arr)
+        self.graphicsView.addItem(img_arr)
+        self.label_frameNum.setText("Frame " + str(count))
+        self.horizontalSlider.setSliderPosition(count)
+        if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
+            self.checkBox_StoreData.setChecked(False)
+        elif(self.checkBox_StoreData.isChecked() == False and diameter_data[count -1] != 0):
+            self.checkBox_StoreData.setChecked(True) 
+        print ("viewing frame " + str(count))
+        print("count", count)
+        print(len(diameter_data))
+        
    
 
 
