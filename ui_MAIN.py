@@ -27,6 +27,8 @@ global cir #circle ROI
 added = False #True if ROI object added to viewBox
 
 Y_plot = []
+maxCount = 0
+
 
 
 class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -42,6 +44,8 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.graphicsView.scene().sigMouseClicked.connect(self.onClick) # Connect onClick function to mouse click
         self.checkBox_StoreData.stateChanged.connect(self.saveData) #Connects checkbox to saveData function
         self.actionSave.triggered.connect(self.export_to_csv)
+        
+        
         
         
         
@@ -80,6 +84,12 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         elif key == Qt.Key_Escape: #if ESC key is pressed, program close
             self.close()    
             
+        elif key == Qt.Key_Delete: #if del key is pressed, ROI is removed. #STILL have to manually remove data though. #TO DO
+            added = False
+            self.gv.removeItem(cir)
+            coordinates[:] = []
+            print("del key pressed")
+            
     def openVidFile(self):
         fileName = openFile() #openFile() opens file browser and returns name of selected video file
         directory = str(QFileDialog.getExistingDirectory(self, "Select Folder to Store Frames")) # File dialog opens for user to create/selet a folder to store the frames extracted from video
@@ -107,7 +117,6 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             coordinates.append((x,y))
         elif len(coordinates) == 1:
             coordinates.append((x,y))
-            print(coordinates)
             x1 = coordinates[0][0]
             y1 = coordinates[0][1] 
             x2 = coordinates[1][0]
@@ -115,10 +124,10 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             d = 2*np.sqrt((x1-x2)**2 + (y1-y2)**2)   #diameter
             LLC = (x1 - (d/2), (y1 - (d/2))) # lower left corner of bounding box
             cir = pg.CircleROI(LLC, [d,d], pen=(4,8)) #blue
-            print("CIR DIAMETER:", d)
             self.gv.addItem(cir)
             added = True
-            # coordinates[:] = []   #resets array - allows you to draw several circles in one session (just for testing purposes for now) 
+  
+            #coordinates[:] = []   #resets array - allows you to draw several circles in one session (just for testing purposes for now) 
 
     def saveData(self,ev):
         global added
@@ -142,16 +151,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             #print(diameter_data)
             print("data deleted at count =", count)
      
-    
-  
-    def delROI(self, event):
-        global diameter_data 
-        if event.key() == Qt.Key_Delete: #if del key is pressed, ROI is removed. #STILL have to manually remove data though. #TO DO
-            self.gv.removeItem(cir)
-            print("del key pressed")
-
-
-             
+                 
     def plot(self):
         global diameter_data
         global Y_plot
@@ -185,6 +185,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 
     def update(self):
         global img_arr
+        global maxCount
         img = Image.open(image_list[count])  #
         arr = array(img)
         arr = np.rot90(arr, -1)
@@ -192,14 +193,26 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.graphicsView.addItem(img_arr)
         self.label_frameNum.setText("Frame " + str(count))
         self.horizontalSlider.setSliderPosition(count)
+
+        if (count>maxCount):
+            maxCount = count
+
+        
+        
+#        if (added == True and count >= maxCount)
+#            self.checkBox_StoreData.setChecked(True)
+#        
+        
+        
+        
         if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
             self.checkBox_StoreData.setChecked(False)
         elif(self.checkBox_StoreData.isChecked() == False and diameter_data[count -1] != 0):
             self.checkBox_StoreData.setChecked(True) 
-        print ("viewing frame " + str(count))
-        print("count", count)
-        print(len(diameter_data))
+            
+
         
+
    
 
 
