@@ -21,13 +21,14 @@ frames= 0
 image_list = [] #stores paths of all frames extracted from video
 coordinates = [] #array stores coordinates during double clicks to draw ROI
 diameter_data = [] #array that contains ROI diameters
-for x in range(0,787):    #TO DO: add unique range based on # of image frames. Left like this for now for testing purposes
-    diameter_data.append(0)
 global cir #circle ROI
 added = False #True if ROI object added to viewBox
 
 Y_plot = []
 maxCount = 0
+
+for x in range(0,15):    #TO DO: add unique range based on # of image frames. Left like this for now for testing purposes
+    diameter_data.append(0)
 
 
 
@@ -87,8 +88,11 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         elif key == Qt.Key_Delete: #if del key is pressed, ROI is removed. #STILL have to manually remove data though. #TO DO
             added = False
             self.gv.removeItem(cir)
+            self.checkBox_StoreData.setChecked(False) 
             coordinates[:] = []
-            print("del key pressed")
+            print("  ")
+            print("delete", diameter_data)
+            print(" ")
             
     def openVidFile(self):
         fileName = openFile() #openFile() opens file browser and returns name of selected video file
@@ -103,6 +107,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             
         self.horizontalSlider.setRange(0,len(image_list)-1)
         self.video_title.setText(fileName)
+        self.update()
 
         
     def onClick(self,ev):
@@ -126,30 +131,31 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             cir = pg.CircleROI(LLC, [d,d], pen=(4,8)) #blue
             self.gv.addItem(cir)
             added = True
-  
+            self.checkBox_StoreData.setChecked(True) 
             #coordinates[:] = []   #resets array - allows you to draw several circles in one session (just for testing purposes for now) 
 
-    def saveData(self,ev):
-        global added
-       
-        #If checkbox is checked, save the data
-        if self.checkBox_StoreData.isChecked():
-            if added == False:
-                print("No ROI on screen.")
-            else:
-                d = cir.size() #function to get width and height, returned as tuple
-                d = d[1] #since width = height, we just need to store one of the numbers
-                diameter_data[count-1] = d
-                #print(diameter_data)                   
-                print("data added at count =", count)
-                Y_plot.append(d)
-                
-        else:
+    def saveData(self):
+        if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1]==0):
+            d = cir.size() #function to get width and height, returned as tuple
+            d = d[1] #since width = height, we just need to store one of the numbers
+            diameter_data[count-1] = d                  
+            Y_plot.append(d)
+            print(" ")
+            print("SAVED:", diameter_data)
+            print(" ")
+            
+            
+        elif(self.checkBox_StoreData.isChecked() == False):
             ##delete data
             diameter_data[count-1] = 0
+            added = False
+            self.gv.removeItem(cir)
+            print(" ")
+            print("DELETED:", diameter_data)
             #print("current data in", count, "in array:", diameter_data[count])
-            #print(diameter_data)
-            print("data deleted at count =", count)
+            
+        else:
+            print("nothing saved/deleted")
      
                  
     def plot(self):
@@ -193,25 +199,26 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.graphicsView.addItem(img_arr)
         self.label_frameNum.setText("Frame " + str(count))
         self.horizontalSlider.setSliderPosition(count)
-
-        if (count>maxCount):
+        if (count>maxCount):  #Checks the maximum frame # that was reached
             maxCount = count
-
-        
-        
-#        if (added == True and count >= maxCount)
-#            self.checkBox_StoreData.setChecked(True)
-#        
-        
-        
-        
-        if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1] == 0):
-            self.checkBox_StoreData.setChecked(False)
-        elif(self.checkBox_StoreData.isChecked() == False and diameter_data[count -1] != 0):
-            self.checkBox_StoreData.setChecked(True) 
             
-
-        
+        if count == maxCount:
+            if(diameter_data[count-2] != 0):
+                self.checkBox_StoreData.setChecked(True)
+            else:
+                self.checkBox_StoreData.setChecked(False)
+                
+        elif count < maxCount:
+            if(diameter_data[count-1] != 0):
+                self.checkBox_StoreData.setChecked(True)
+                #cir.setState(saveState[count-1])
+                self.graphicsView.addItem(cir)
+            else:
+                self.checkBox_StoreData.setChecked(False)
+                
+        self.saveData()
+        print(" ")
+        print("Current array:", diameter_data)
 
    
 
