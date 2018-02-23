@@ -26,10 +26,11 @@ added = False #True if ROI object added to viewBox
 
 Y_plot = []
 maxCount = 0
+saveState = []
 
 for x in range(0,15):    #TO DO: add unique range based on # of image frames. Left like this for now for testing purposes
     diameter_data.append(0)
-
+    saveState.append(0)
 
 
 class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -44,9 +45,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.horizontalSlider.sliderMoved.connect(self.sliderMoved) # when slider is moved, it will trigger sliderMoved function
         self.graphicsView.scene().sigMouseClicked.connect(self.onClick) # Connect onClick function to mouse click
         self.checkBox_StoreData.stateChanged.connect(self.saveData) #Connects checkbox to saveData function
-        self.actionSave.triggered.connect(self.export_to_csv)
-        
-        
+        self.actionSave.triggered.connect(self.export_to_csv)     
         
         
         
@@ -132,6 +131,8 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.gv.addItem(cir)
             added = True
             self.checkBox_StoreData.setChecked(True) 
+            cir.sigRegionChangeFinished.connect(self.updateROIdata) #If the ROI is changed in current frame, the updateROIdata function is called
+  
             #coordinates[:] = []   #resets array - allows you to draw several circles in one session (just for testing purposes for now) 
 
     def saveData(self):
@@ -156,8 +157,62 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             
         else:
             print("nothing saved/deleted")
+
+
+    def updateROIdata(self):
+        global cir
+        global count
+        d = cir.size() #function to get width and height, returned as tuple
+        d = d[1] #since width = height, we just need to store one of the numbers
+        diameter_data[count-1] = d                  
+        #also change Y plot................
+        print(" ")
+        print("CHANGED SAVE:", diameter_data)
+        print(" ")
+
      
                  
+  
+                
+    def updateROI(self):
+        pass
+     #saveState[count-1] = cir.saveState()
+              
+                
+    def update(self):
+        global img_arr
+        global maxCount
+        img = Image.open(image_list[count])  #
+        arr = array(img)
+        arr = np.rot90(arr, -1)
+        img_arr = pg.ImageItem(arr)
+        self.graphicsView.addItem(img_arr)
+        
+        self.label_frameNum.setText("Frame " + str(count))
+        self.horizontalSlider.setSliderPosition(count)
+        if (count>maxCount):  #Checks the maximum frame # that was reached
+            maxCount = count
+            
+        if count == maxCount:
+            if(diameter_data[count-2] != 0):
+                self.checkBox_StoreData.setChecked(True)
+            else:
+                self.checkBox_StoreData.setChecked(False)
+                
+        elif count < maxCount:
+            if(diameter_data[count-1] != 0):
+                self.checkBox_StoreData.setChecked(True)
+
+            else:
+                self.checkBox_StoreData.setChecked(False)
+                
+        self.saveData()
+        print(" ")
+        print("Current array:", diameter_data)
+        
+        cir.sigRegionChangeFinished.connect(self.updateROIdata) #If the ROI is changed in current frame, the updateROIdata function is called
+  
+
     def plot(self):
         global diameter_data
         global Y_plot
@@ -187,40 +242,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             writer = csv.writer(csvfile, lineterminator = '\n', delimiter=' ')
             for num in diameter_data:
                 writer.writerow([num])
-                
-                
-    def update(self):
-        global img_arr
-        global maxCount
-        img = Image.open(image_list[count])  #
-        arr = array(img)
-        arr = np.rot90(arr, -1)
-        img_arr = pg.ImageItem(arr)
-        self.graphicsView.addItem(img_arr)
-        self.label_frameNum.setText("Frame " + str(count))
-        self.horizontalSlider.setSliderPosition(count)
-        if (count>maxCount):  #Checks the maximum frame # that was reached
-            maxCount = count
-            
-        if count == maxCount:
-            if(diameter_data[count-2] != 0):
-                self.checkBox_StoreData.setChecked(True)
-            else:
-                self.checkBox_StoreData.setChecked(False)
-                
-        elif count < maxCount:
-            if(diameter_data[count-1] != 0):
-                self.checkBox_StoreData.setChecked(True)
-                #cir.setState(saveState[count-1])
-                self.graphicsView.addItem(cir)
-            else:
-                self.checkBox_StoreData.setChecked(False)
-                
-        self.saveData()
-        print(" ")
-        print("Current array:", diameter_data)
-
-   
+      
 
 
 def main():

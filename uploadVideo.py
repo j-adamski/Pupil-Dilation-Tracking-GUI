@@ -44,7 +44,6 @@ def getFPS():
     #note: This fuction does not work on the video from Dr. Gaynes because it does not have FPS in the vid properties.
     #      It works on other videos. For now we will just calculate the FPS for that specific video.
     global vidcap
-    print(vidcap)
     fps = vidcap.get(cv2.CAP_PROP_FPS)
     return fps 
 
@@ -52,7 +51,6 @@ def calculateFPS():
     s = 41
     frames = 737
     fps = 737/41
-    print(fps)
     return fps
       
         
