@@ -139,7 +139,8 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1]==0):
             d = cir.size() #function to get width and height, returned as tuple
             d = d[1] #since width = height, we just need to store one of the numbers
-            diameter_data[count-1] = d                  
+            diameter_data[count-1] = d   
+            saveState[count-1]=cir.saveState()               
             Y_plot.append(d)
             print(" ")
             print("SAVED:", diameter_data)
@@ -149,6 +150,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         elif(self.checkBox_StoreData.isChecked() == False):
             ##delete data
             diameter_data[count-1] = 0
+            saveState[count-1]= 0
             added = False
             self.gv.removeItem(cir)
             print(" ")
@@ -164,31 +166,43 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         global count
         d = cir.size() #function to get width and height, returned as tuple
         d = d[1] #since width = height, we just need to store one of the numbers
-        diameter_data[count-1] = d                  
+        diameter_data[count-1] = d         
+        saveState[count-1]=cir.saveState()                
         #also change Y plot................
         print(" ")
         print("CHANGED SAVE:", diameter_data)
         print(" ")
 
      
-                 
-  
-                
     def updateROI(self):
+        global cir
         pass
-     #saveState[count-1] = cir.saveState()
-              
+
                 
     def update(self):
         global img_arr
         global maxCount
+        global cir
         img = Image.open(image_list[count])  #
         arr = array(img)
         arr = np.rot90(arr, -1)
         img_arr = pg.ImageItem(arr)
         self.graphicsView.addItem(img_arr)
         
+#        if diameter_data[count-1]!=0:
+#            print(saveState[count-1])
+#            cir.setState(saveState[count-1])
+#            #self.graphicsView.addItem(cir) 
+#        elif(diameter_data[count-1]!=0 and diameter_data[count]==0):
+#            cir = pg.CircleROI(LLC, [d,d], pen=(4,8)) #blue
+#            self.gv.addItem(cir)
+#            cir.setState(saveState[count-1])
+#        else:
+#            print("false")
+#            #self.graphicsView.addItem(cir.setState(saveState[count-1]))  
+        
         self.label_frameNum.setText("Frame " + str(count))
+        
         self.horizontalSlider.setSliderPosition(count)
         if (count>maxCount):  #Checks the maximum frame # that was reached
             maxCount = count
@@ -196,22 +210,32 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if count == maxCount:
             if(diameter_data[count-2] != 0):
                 self.checkBox_StoreData.setChecked(True)
+                #TO DO: set ROI if someone goes back and then goes forward to this frame
             else:
                 self.checkBox_StoreData.setChecked(False)
-                
-        elif count < maxCount:
-            if(diameter_data[count-1] != 0):
+         
+        elif count < maxCount: #If true, then that means that the user is going back through the frames
+            if(diameter_data[count-1] != 0):  #There is data stored in current frame
                 self.checkBox_StoreData.setChecked(True)
-
-            else:
+                print("Checking this now: count is", count, "max count is", maxCount)
+                cir.setState(saveState[count-1])
+                print("1")
+                if(diameter_data[count] == 0):
+                    self.gv.addItem(cir)
+                    cir.setState(saveState[count-1])
+                    print("2")
+            elif(diameter_data[count-1] == 0):
                 self.checkBox_StoreData.setChecked(False)
+            else:
+                print("hitting ELSE statement")
                 
         self.saveData()
         print(" ")
         print("Current array:", diameter_data)
         
-        cir.sigRegionChangeFinished.connect(self.updateROIdata) #If the ROI is changed in current frame, the updateROIdata function is called
-  
+        if(diameter_data != 0):
+            cir.sigRegionChangeFinished.connect(self.updateROIdata) #If the ROI is changed in current frame, the updateROIdata function is called
+        
 
     def plot(self):
         global diameter_data
