@@ -23,6 +23,7 @@ coordinates = [] #array stores coordinates during double clicks to draw ROI
 diameter_data = [] #array that contains ROI diameters
 global cir #circle ROI
 added = False #True if ROI object added to viewBox
+navigation = " "
 
 Y_plot = []
 maxCount = 0
@@ -69,17 +70,20 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
     def keyPressEvent(self, event):
         global count
+        global navigation
         key = event.key()
         if key == Qt.Key_A:
             if count > 0:
                 count= count - 1 
                 self.update()
+                navigation = "L"
 
         elif key == Qt.Key_D:
             if count < len(image_list)-1:
                 count = count + 1
                 self.plot()
                 self.update()
+                navigation = "R"
                             
         elif key == Qt.Key_Escape: #if ESC key is pressed, program close
             self.close()    
@@ -139,8 +143,8 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if (self.checkBox_StoreData.isChecked() == True and diameter_data[count-1]==0):
             d = cir.size() #function to get width and height, returned as tuple
             d = d[1] #since width = height, we just need to store one of the numbers
-            diameter_data[count-1] = d   
-            saveState[count-1]=cir.saveState()               
+            diameter_data[count-1] = d   #adding the diameter to correct spot in array
+            saveState[count-1]=cir.saveState()    #also appending the save state           
             Y_plot.append(d)
             print(" ")
             print("SAVED:", diameter_data)
@@ -166,7 +170,8 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         global count
         d = cir.size() #function to get width and height, returned as tuple
         d = d[1] #since width = height, we just need to store one of the numbers
-        diameter_data[count-1] = d         
+        diameter_data[count-1] = d   
+        
         saveState[count-1]=cir.saveState()                
         #also change Y plot................
         print(" ")
@@ -183,24 +188,11 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         global img_arr
         global maxCount
         global cir
-        img = Image.open(image_list[count])  #
+        img = Image.open(image_list[count])
         arr = array(img)
         arr = np.rot90(arr, -1)
         img_arr = pg.ImageItem(arr)
         self.graphicsView.addItem(img_arr)
-        
-#        if diameter_data[count-1]!=0:
-#            print(saveState[count-1])
-#            cir.setState(saveState[count-1])
-#            #self.graphicsView.addItem(cir) 
-#        elif(diameter_data[count-1]!=0 and diameter_data[count]==0):
-#            cir = pg.CircleROI(LLC, [d,d], pen=(4,8)) #blue
-#            self.gv.addItem(cir)
-#            cir.setState(saveState[count-1])
-#        else:
-#            print("false")
-#            #self.graphicsView.addItem(cir.setState(saveState[count-1]))  
-        
         self.label_frameNum.setText("Frame " + str(count))
         
         self.horizontalSlider.setSliderPosition(count)
@@ -213,22 +205,19 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 #TO DO: set ROI if someone goes back and then goes forward to this frame
             else:
                 self.checkBox_StoreData.setChecked(False)
-         
-        elif count < maxCount: #If true, then that means that the user is going back through the frames
+                self.gv.removeItem(cir)  #is this necessary?
+                
+        elif count < maxCount: #If true, then that means that the user is going back through the frames 
             if(diameter_data[count-1] != 0):  #There is data stored in current frame
                 self.checkBox_StoreData.setChecked(True)
-                print("Checking this now: count is", count, "max count is", maxCount)
+                self.gv.removeItem(cir)
+                self.gv.addItem(cir)
                 cir.setState(saveState[count-1])
-                print("1")
-                if(diameter_data[count] == 0):
-                    self.gv.addItem(cir)
-                    cir.setState(saveState[count-1])
-                    print("2")
+    
             elif(diameter_data[count-1] == 0):
                 self.checkBox_StoreData.setChecked(False)
-            else:
-                print("hitting ELSE statement")
                 
+
         self.saveData()
         print(" ")
         print("Current array:", diameter_data)
