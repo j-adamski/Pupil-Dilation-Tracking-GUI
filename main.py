@@ -98,6 +98,7 @@ class Ui_MainWindow(object):
         
     
         self.graphicsView = PlotWidget(self.tab_FrameViewer)
+        graphicsView = self.graphicsView
         self.graphicsView.setObjectName("graphicsView")
         self.graphicsView.setAspectLocked(True) #keeps aspect locked for imported video frames, otherwise it stretches everything out.        
         
@@ -162,7 +163,7 @@ class Ui_MainWindow(object):
         self.action1.setObjectName("action1")
         self.action2 = QtWidgets.QAction(MainWindow)
         self.action2.setCheckable(True)
-        self.action2.setChecked(True)
+        #self.action2.setChecked(True)
         self.action2.setObjectName("action2")
         self.action3 = QtWidgets.QAction(MainWindow)
         self.action3.setCheckable(True)
@@ -173,9 +174,20 @@ class Ui_MainWindow(object):
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionSave)
         self.menuFile.addAction(self.actionSave_as)
-        self.menuAutomation_Levels.addAction(self.action1)
-        self.menuAutomation_Levels.addAction(self.action2)
-        self.menuAutomation_Levels.addAction(self.action3)
+        
+        #self.menuAutomation_Levels.addAction(self.action1)
+        #self.menuAutomation_Levels.addAction(self.action2)
+        #self.menuAutomation_Levels.addAction(self.action3)
+        
+        #Creating QActionGroup to have radio buttons in the file menu, previous code w/o radio buttons commented out above
+        self.ag = QtGui.QActionGroup(MainWindow, exclusive=True)
+        self.a1 = self.ag.addAction(self.action1)
+        self.menuAutomation_Levels.addAction(self.a1)
+        self.a2 = self.ag.addAction(self.action2)
+        self.menuAutomation_Levels.addAction(self.a2)
+        self.a3 = self.ag.addAction(self.action3)
+        self.menuAutomation_Levels.addAction(self.a3)
+        
         self.menuOptions.addAction(self.menuAutomation_Levels.menuAction())
         self.menuOptions.addSeparator()
         self.menuOptions.addAction(self.actionProperties)
@@ -206,16 +218,14 @@ class Ui_MainWindow(object):
         self.actionOpen.setText(_translate("MainWindow", "Open"))
         self.actionSave.setText(_translate("MainWindow", "Save"))
         self.actionSave_as.setText(_translate("MainWindow", "Save as"))
-        self.actionPupil_detection_assist.setText(_translate("MainWindow", "Pupil detection assist"))
+        
         self.actionProperties.setText(_translate("MainWindow", "Properties"))
         self.actionTutorial.setText(_translate("MainWindow", "Tutorial"))
-        self.actionImage_shift_detection.setText(_translate("MainWindow", "Image shift detection"))
+        
         self.action1.setText(_translate("MainWindow", "1 - Manual selection"))
         self.action2.setText(_translate("MainWindow", "2 - Gaussian Filter"))
         self.action3.setText(_translate("MainWindow", "3 - Kalman Filter"))
-        #self.action4_Carry_over_selection_image_shift_detection_pupil_size_adjustment.setText(_translate("MainWindow", "4 - Carry over selection, image shift detection, pupil size adjustment"))
-        #self.action5_Automated_pupil_detection_indicate_pupil_on_first_frame_only.setText(_translate("MainWindow", "5 - Automated pupil detection (indicate pupil on first frame only) "))
-
+        
 from pyqtgraph import PlotWidget
 
 if __name__ == "__main__":

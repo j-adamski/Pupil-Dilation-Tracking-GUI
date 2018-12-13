@@ -1,3 +1,5 @@
+
+
 # -*- coding: utf-8 -*-
 """
 Created on Tue May 23 15:51:55 2017
@@ -14,6 +16,12 @@ import time
 import numpy as np
 import os
 global vidcap
+import main 
+
+from PIL import Image
+
+
+image_list = [] #stores paths of all frames extracted from video
     
 def openFile():   
     options = QFileDialog.Options()
@@ -52,8 +60,33 @@ def calculateFPS():
     frames = 737
     fps = 737/41
     return fps
-      
+
+
+def openVidFile():
+    import ui_MAIN
+    from ui_MAIN import MyMainWindow
+    global image_list
+    global video_title
+    fileName = openFile() #openFile() opens file browser and returns name of selected video file
+    directory = str(QFileDialog.getExistingDirectory(ui_MAIN.MyMainWindow(),"Select Folder to Store Frames")) # File dialog opens for user to create/selet a folder to store the frames extracted from video
+    print("directory is:", directory)
+    splitVideo(fileName, image_list, directory) 
+    
+    #TO DO: instead of a given range, feed it the num of frames extracted from video. Left like this for testing purposes for now.
+    #TO DO: add loading status bar while frames are being uploaded        
+   
+    for x in range(1, 738):
+        image_list.append(directory + "/frame" + str(x) + ".jpg")
         
+    #ui_MAIN.MyMainWindow.horizontalSlider.setRange(0,len(image_list)-1)
+    #ui_MAIN.MyMainWindow.video_title.setText(fileName)
+    #ui_MAIN.MyMainWindow().add_img()
+
+
+def img_list():
+    return image_list
+    
+
 #Note:last frame come out as NULL image - so it need to be ignored
             
       
