@@ -1,28 +1,40 @@
 # Pupil Dilation Tracker
 
-Pupil Dilation Tracker simplifies the process of measuring the change of pupil constriction and dilation from video files.
+The Pupil Dilation Tracker uses ellipse fitting techniques to automatically measure changes in pupil diameter throughout videos. Data is recorded at each frame and can be exported as a csv file.
 
 ## Table of Contents
-1. [Basic Overview](#basic-overview)
-2. [Features](#features)
-3. [Installation](#installation)
-
-## Basic Overview
-
-This program is designed for clinical application to speed up the process of extracting pupil diameter data from video files. It extracts video frames and imports them into the program. Data can be saved by *manually selecting the ROI* (region of interest) around the pupil or with the help of a *Kalman filter for automatic detection* (More details in [features](#features) section). The change in diameter vs. time at frame is plotted as data is saved. Diameter data from each frame can be saved to a cvs file.
-
+1. [Features](#features)
+2. [Installation](#installation)
 
 ## Features
-**Manual Selection**
+**Frame extraction**  
+Frames can extracted from videos or directly imported into the program.
 
-The user can manually select the ROI around the pupil by first clicking the center of the pupil and then clicking anywhere on the outside of the pupil. After being drawn, the ROI selection can be dragged and adjusted into the correct spot. Data is automatically saved as the ROI selection is drawn/adjusted. Pupil selection from the previous frame is carried over to the next to make data collection quick and easy. In cases where the pupil is not visable (e.g. blinking eye), the ROI widget can be removed and data is automatically deleted for that frame.
+**Optimizing the detection**
+Detections can be done and later edited on single frames, a custom range, or all of the frames. The threshold and center can be customized with a click for further optimization. 
 
+**Blink management** 
+In the case of a blink or faulty detection, a checkbox can be marked to indicate to use data from the previous frame.
 
-**Pupil tracking using Kalman filter**
-
-To be implemented in the future
-
+**Exporting data to csv**
+Pupil diameter measurements can be exported to a csv file.
 
 ## Installation
 
-Placeholder
+**1. Download Anaconda** Python Version 3.5+  https://www.anaconda.com/download/
+
+**2. Install packages** - Open the Anaconda Prompt and install the necessary packages
+
+opencv `conda install -c menpo opencv`
+
+For the rest of the packages run command: `conda install package-name`
+- pyqt
+- pyqtgraph
+- numpy
+- pillow
+
+**3. Clone repository**
+`git clone https://github.com/j-adamski/Pupil-Dilation-Tracking-GUI.git`
+
+**4. Run program**
+`python ui_MAIN.py`
