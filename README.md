@@ -26,6 +26,7 @@ Pupil diameter measurements can be exported to a csv file.
 **2. Install packages** - Open the Anaconda Prompt and install the necessary packages
 
 opencv `conda install -c menpo opencv`
+filterpy 'conda install -c conda-forge filterpy'
 
 For the rest of the packages run command: `conda install package-name`
 - pyqt
