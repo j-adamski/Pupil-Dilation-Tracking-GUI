@@ -55,11 +55,17 @@ class Ui_MainWindow(object):
         self.frame.setObjectName("frame")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.frame)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
+        
+        
+        
+
+        
         self.frame_2 = QtWidgets.QFrame(self.frame)
         self.frame_2.setMinimumSize(QtCore.QSize(0, 70))
         self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_2.setObjectName("frame_2")
+        
         self.gridLayout_3 = QtWidgets.QGridLayout(self.frame_2)
         self.gridLayout_3.setObjectName("gridLayout_3")
         self.horizontalSlider = QtWidgets.QSlider(self.frame_2)
@@ -86,11 +92,41 @@ class Ui_MainWindow(object):
         self.gridLayout_3.addWidget(self.R_button, 1, 2, 1, 1)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.gridLayout_3.addItem(spacerItem1, 1, 3, 1, 1)
+
+
         self.verticalLayout_3.addWidget(self.frame_2)
         self.gridLayout_2.addWidget(self.frame, 2, 1, 1, 1)
-        self.checkBox_StoreData = QtWidgets.QCheckBox(self.tab_FrameViewer)
-        self.checkBox_StoreData.setObjectName("checkBox_StoreData")
-        self.gridLayout_2.addWidget(self.checkBox_StoreData, 0, 1, 1, 1, QtCore.Qt.AlignRight)
+        self.checkBox_UsePrevData = QtWidgets.QCheckBox(self.tab_FrameViewer)
+        self.checkBox_UsePrevData.setObjectName("checkBox_UsePrevData")
+        self.gridLayout_2.addWidget(self.checkBox_UsePrevData, 0, 1, 1, 1, QtCore.Qt.AlignRight)
+        
+        
+        self.start_push_button = QtWidgets.QPushButton(self.tab_FrameViewer)
+        self.start_push_button.setGeometry(QtCore.QRect(350, 10, 131, 40))
+        self.start_push_button.setObjectName("start_push_button")
+        self.custom_range_box = QtWidgets.QLineEdit(self.tab_FrameViewer)
+        self.custom_range_box.setGeometry(QtCore.QRect(90, 10, 71, 41))
+        self.custom_range_box.setObjectName("custom_range_box")
+        self.threshold_box = QtWidgets.QLineEdit(self.tab_FrameViewer)
+        self.threshold_box.setGeometry(QtCore.QRect(260, 10, 61, 41))
+        self.threshold_box.setObjectName("threshold_box")
+        self.threshold_label = QtWidgets.QLabel(self.tab_FrameViewer)
+        self.threshold_label.setGeometry(QtCore.QRect(170, 10, 81, 23))
+        self.threshold_label.setObjectName("threshold_label")
+        self.label_2 = QtWidgets.QLabel(self.tab_FrameViewer)
+        self.label_2.setGeometry(QtCore.QRect(20, 10, 80, 23))
+        self.label_2.setObjectName("label_2")
+        self.customRange_label = QtWidgets.QLabel(self.tab_FrameViewer)
+        self.customRange_label.setGeometry(QtCore.QRect(30, 30, 80, 23))
+        self.customRange_label.setObjectName("customRange_label")
+        self.progressBar = QtWidgets.QProgressBar(self.tab_FrameViewer)
+        self.progressBar.setGeometry(QtCore.QRect(500, 20, 124, 25))
+        self.progressBar.setProperty("value", 24)
+        self.progressBar.setObjectName("progressBar")
+        self.threshold_label_2 = QtWidgets.QLabel(self.tab_FrameViewer)
+        self.threshold_label_2.setGeometry(QtCore.QRect(170, 30, 81, 23))
+        self.threshold_label_2.setObjectName("threshold_label_2")
+        
         
         #self.graphicsView = PlotWidget(self.tab_FrameViewer)
         #self.graphicsView.setObjectName("graphicsView")
@@ -101,9 +137,10 @@ class Ui_MainWindow(object):
         graphicsView = self.graphicsView
         self.graphicsView.setObjectName("graphicsView")
         self.graphicsView.setAspectLocked(True) #keeps aspect locked for imported video frames, otherwise it stretches everything out.        
-        
+        self.gridLayout_2.setContentsMargins(0,40,0,0) # Lowers grphicsView a little, so the options are visible at the top
         
         self.gridLayout_2.addWidget(self.graphicsView, 1, 1, 1, 1)
+        
         self.tabWidget.addTab(self.tab_FrameViewer, "")
         self.tab_Data = QtWidgets.QWidget()
         self.tab_Data.setObjectName("tab_Data")
@@ -132,8 +169,8 @@ class Ui_MainWindow(object):
         self.menuFile.setObjectName("menuFile")
         self.menuOptions = QtWidgets.QMenu(self.menubar)
         self.menuOptions.setObjectName("menuOptions")
-        self.menuAutomation_Levels = QtWidgets.QMenu(self.menuOptions)
-        self.menuAutomation_Levels.setObjectName("menuAutomation_Levels")
+    
+        
         self.menuHelp = QtWidgets.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
         MainWindow.setMenuBar(self.menubar)
@@ -146,18 +183,28 @@ class Ui_MainWindow(object):
         self.actionOpen.setObjectName("actionOpen")
         self.actionSave = QtWidgets.QAction(MainWindow)
         self.actionSave.setObjectName("actionSave")
-        self.actionSave_as = QtWidgets.QAction(MainWindow)
-        self.actionSave_as.setObjectName("actionSave_as")
-        self.actionPupil_detection_assist = QtWidgets.QAction(MainWindow)
-        self.actionPupil_detection_assist.setCheckable(True)
-        self.actionPupil_detection_assist.setChecked(False)
-        self.actionPupil_detection_assist.setObjectName("actionPupil_detection_assist")
+        self.actionKalman = QtWidgets.QAction(MainWindow)
+        self.actionKalman.setObjectName("actionKalman")
         self.actionProperties = QtWidgets.QAction(MainWindow)
         self.actionProperties.setObjectName("actionProperties")
         self.actionTutorial = QtWidgets.QAction(MainWindow)
         self.actionTutorial.setObjectName("actionTutorial")
-        self.actionImage_shift_detection = QtWidgets.QAction(MainWindow)
-        self.actionImage_shift_detection.setObjectName("actionImage_shift_detection")
+        
+        self.actionEllipseFitting = QtWidgets.QAction(MainWindow)
+        self.actionEllipseFitting.setObjectName("actionEllipseFitting")
+        self.actionEllipseFitting.setCheckable(True)
+        self.actionEllipseFitting.setChecked(True)
+        
+
+        self.actionManualSelection = QtWidgets.QAction(MainWindow)
+        self.actionManualSelection.setCheckable(True)
+        self.actionManualSelection.setChecked(False)
+        self.actionManualSelection.setObjectName("actionManualSelection")
+
+
+             
+
+        '''
         self.action1 = QtWidgets.QAction(MainWindow)
         self.action1.setCheckable(True)
         self.action1.setObjectName("action1")
@@ -168,33 +215,33 @@ class Ui_MainWindow(object):
         self.action3 = QtWidgets.QAction(MainWindow)
         self.action3.setCheckable(True)
         self.action3.setObjectName("action3")
+        '''        
         
+        # Adding menu actions under "FILE" 
         self.menuFile.addAction(self.actionUpload_new)
         self.menuFile.addAction(self.actionOpen)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionSave)
-        self.menuFile.addAction(self.actionSave_as)
+        self.menuFile.addAction(self.actionKalman)
         
-        #self.menuAutomation_Levels.addAction(self.action1)
-        #self.menuAutomation_Levels.addAction(self.action2)
-        #self.menuAutomation_Levels.addAction(self.action3)
-        
-        #Creating QActionGroup to have radio buttons in the file menu, previous code w/o radio buttons commented out above
+           
+        #Adding menu actions under "OPTIONS"
+     #   self.menuOptions.addAction(self.actionEllipseFitting)
+     #   self.menuOptions.addAction(self.actionManualSelection)
+                
+     
+        #Creating QActionGroup to have radio buttons in the file menu,  code w/o radio buttons commented out above
         self.ag = QtGui.QActionGroup(MainWindow, exclusive=True)
-        self.a1 = self.ag.addAction(self.action1)
-        self.menuAutomation_Levels.addAction(self.a1)
-        self.a2 = self.ag.addAction(self.action2)
-        self.menuAutomation_Levels.addAction(self.a2)
-        self.a3 = self.ag.addAction(self.action3)
-        self.menuAutomation_Levels.addAction(self.a3)
+        self.a1 = self.ag.addAction(self.actionEllipseFitting)
+        self.menuOptions.addAction(self.a1)
+        self.a2 = self.ag.addAction(self.actionManualSelection)
+        self.menuOptions.addAction(self.a2)
+       
+   
         
-        self.menuOptions.addAction(self.menuAutomation_Levels.menuAction())
-        self.menuOptions.addSeparator()
-        self.menuOptions.addAction(self.actionProperties)
-        self.menuHelp.addAction(self.actionTutorial)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuOptions.menuAction())
-        self.menubar.addAction(self.menuHelp.menuAction())
+    
 
         self.retranslateUi(MainWindow)
         self.tabWidget.setCurrentIndex(0)
@@ -207,24 +254,38 @@ class Ui_MainWindow(object):
         self.label_frameNum.setText(_translate("MainWindow", "No frames to display"))
         self.L_button.setText(_translate("MainWindow", "🡰"))
         self.R_button.setText(_translate("MainWindow", "🡲"))
-        self.checkBox_StoreData.setText(_translate("MainWindow", "Data Stored"))
+        self.checkBox_UsePrevData.setText(_translate("MainWindow", "Use Previous Frame Data"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_FrameViewer), _translate("MainWindow", "Video frames"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_Data), _translate("MainWindow", "Data"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuOptions.setTitle(_translate("MainWindow", "Options"))
-        self.menuAutomation_Levels.setTitle(_translate("MainWindow", "Automation Levels"))
+        self.actionManualSelection.setText(_translate("MainWindow", "Manual Selection"))
+        self.actionEllipseFitting.setText(_translate("MainWindow", "Ellipse Fitting"))
+       
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.actionUpload_new.setText(_translate("MainWindow", "Upload new"))
         self.actionOpen.setText(_translate("MainWindow", "Open"))
         self.actionSave.setText(_translate("MainWindow", "Save"))
-        self.actionSave_as.setText(_translate("MainWindow", "Save as"))
+        self.actionKalman.setText(_translate("MainWindow", "Apply Kalman Filter"))
         
         self.actionProperties.setText(_translate("MainWindow", "Properties"))
         self.actionTutorial.setText(_translate("MainWindow", "Tutorial"))
         
+        self.start_push_button.setText(_translate("MainWindow", "START"))
+        self.threshold_label.setText(_translate("MainWindow", "   Custom"))
+        self.threshold_label_2.setText(_translate("MainWindow", "Threshold"))
+        self.customRange_label.setText(_translate("MainWindow", "Range"))
+        self.label_2.setText(_translate("MainWindow", "Custom"))
+        self.threshold_box.setText(_translate("MainWindow", "0.5"))
+        
+        self.progressBar.setProperty("value", 0)
+
+        
+        '''
         self.action1.setText(_translate("MainWindow", "1 - Manual selection"))
         self.action2.setText(_translate("MainWindow", "2 - Gaussian Filter"))
         self.action3.setText(_translate("MainWindow", "3 - Kalman Filter"))
+        '''
         
 from pyqtgraph import PlotWidget
 

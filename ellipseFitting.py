@@ -7,16 +7,6 @@ import warnings
 from numpy.linalg import eig, inv
 
 
-csv_file = 'data.csv'  #TODO
-
-#threshold = 40
-input_frame = '470_8/frame%04d.jpg'
-output_frame = '470_8_circle/frame%04d.jpg'
-test_frame = '470_8/frame0001.jpg'
-first_frame = '470_8/frame0001.jpg'
-n_frame = 3872
-
-
 def createLineIterator(P1, P2, img):
     """
     Produces and array that consists of the coordinates and intensities of each pixel in a line between two points
@@ -45,7 +35,6 @@ def createLineIterator(P1, P2, img):
     dY = P2Y - P1Y
     dXa = np.abs(dX)
     dYa = np.abs(dY)
-    
 
     #predefine numpy array for output based on distance between points
     itbuffer = np.empty(shape=(np.maximum(dYa,dXa),3),dtype=np.float32)
@@ -71,16 +60,16 @@ def createLineIterator(P1, P2, img):
         if steepSlope:
             slope = dX.astype(np.float32)/dY.astype(np.float32)
             if negY:
-                itbuffer[:,1] = np.arange(P1Y-1,P1Y-dYa,-1)
+                itbuffer[:,1] = np.arange(P1Y-1,P1Y-dYa-1,-1)
             else:
-                itbuffer[:,1] = np.arange(P1Y+1,P1Y+dYa)
+                itbuffer[:,1] = np.arange(P1Y+1,P1Y+dYa+1)
             itbuffer[:,0] = (slope*(itbuffer[:,1]-P1Y)).astype(np.int) + P1X
         else:
             slope = dY.astype(np.float32)/dX.astype(np.float32)
             if negX:
-                itbuffer[:,0] = np.arange(P1X-1,P1X-dXa,-1)
+                itbuffer[:,0] = np.arange(P1X-1,P1X-dXa-1,-1)
             else:
-                itbuffer[:,0] = np.arange(P1X+1,P1X+dXa) 
+                itbuffer[:,0] = np.arange(P1X+1,P1X+dXa+1)
             itbuffer[:,1] = (slope*(itbuffer[:,0]-P1X)).astype(np.int) + P1Y
 
     #Remove points outside of image
@@ -93,7 +82,6 @@ def createLineIterator(P1, P2, img):
 
     return itbuffer
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 '''Idea from: https://stackoverflow.com/questions/45922566/ellipse-fitting-for-pupil-center'''
 
@@ -122,17 +110,18 @@ def find_edge_points(center, radius, img, d_theta = np.pi/180 ):
 #                break
 
         edge_detected = False
-        glare_detected = False 
-        for i in range(1,len(result)-140):
+        glare_detected = False
+        
+        for i in range(len(result)):
             
-            if result[i-1][2] == 255:
+            if result[i][2] == 255:
                 edge_detected = True
-                for j in range(1,141,20):
-                    if result[i+j][2] == 0:
-                        r_detected = np.sqrt(np.power(result[i+j][0]-center[0], 2)+\
-                                             np.power(result[i+j][1]-center[1], 2))
-                        if r_detected < radius:
-                            glare_detected = True
+                
+            if edge_detected:
+                for j in range(i,len(result)-i):
+                    if result[j][2] == 0:
+                        glare_detected = True
+                        break
             if edge_detected and not glare_detected:
                 points.append((result[i][0],result[i][1]))
                 break
@@ -187,25 +176,27 @@ def ellipse_axis_length( a ):
     return np.array([res1, res2])
 
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
 def image_thresholding(img,threshold):
     threshold_pupil = threshold  
-    idx1 = img[:,:] > threshold_pupil 
-    idx2 = img[:,:] < threshold_pupil
+#    idx1 = img[:,:] > threshold_pupil
+#    idx2 = img[:,:] < threshold_pupil
+    idx1 =  threshold_pupil < img[:,:] 
+    idx2 = img[:,:] < threshold_pupil 
+#    idx3 = img[:,:] > 1.5*threshold_pupil
     img[idx1] = 255
     img[idx2] = 0
+#    img[idx3] = 0
     return img
     
 def get_image_mat(filename):
-    img = Image.open(filename)   #img = Image.open(filename).convert('LA')
+    img = Image.open(filename).convert('LA')
     #img = img.resize((120, 100), Image.ANTIALIAS)
     img = np.asarray(img, 'double').transpose()  
     img = img[0,:,:] # just one layer
     return img
 
 def get_binary_image_mat(filename,threshold):
-    img = Image.open(filename)   #img = Image.open(filename).convert('LA')
+    img = Image.open(filename).convert('LA')
     #img = img.resize((120, 100), Image.ANTIALIAS)
     img = np.asarray(img, 'double').transpose()  
     img = img[0,:,:] # just one layer
@@ -244,15 +235,34 @@ def save_image(img, center, radius, a, b, phi, file_name, lum = 255):
     imageio.imwrite(file_name, show_circle_img.transpose())
     return
 
-def export_to_csv(radius_data):
+# Adds 1st column with frame number, 2nd column with data
+
+def export_to_csv(radius_data, csv_file):
+    with open (csv_file, 'w') as csvfile:
+        writer = csv.writer(csvfile, lineterminator = '\n', delimiter=',')
+        for i in range(len(radius_data)):
+            writer.writerows(zip([i+1],[radius_data[i]]))
+    return
+
+
+'''
+# Saves only data (1 column in the file)
+
+def export_to_csv(radius_data,csv_file):
     with open (csv_file, 'w') as csvfile:
         writer = csv.writer(csvfile, lineterminator = '\n', delimiter=' ')
         for num in radius_data:
             writer.writerow([num])
     return
+'''
 
 def isNaN(num):
     return num != num
+
+
+
+
+
 
 
 
