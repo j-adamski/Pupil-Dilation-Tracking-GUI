@@ -261,7 +261,7 @@ class Ui_MainWindow(object):
         self.actionEllipseFitting.setText(_translate("MainWindow", "Ellipse Fitting"))
        
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
-        self.actionUpload_new.setText(_translate("MainWindow", "Upload new"))
+        self.actionUpload_new.setText(_translate("MainWindow", "Upload video"))
         self.actionOpen.setText(_translate("MainWindow", "Open frames"))
         self.actionSave.setText(_translate("MainWindow", "Save"))
         self.actionKalman.setText(_translate("MainWindow", "Apply Kalman Filter"))
