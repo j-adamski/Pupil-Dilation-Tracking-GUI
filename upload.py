@@ -21,8 +21,8 @@ def openFile():
     options = QFileDialog.Options()
     options |= QFileDialog.DontUseNativeDialog
     fileName, _ = QFileDialog.getOpenFileName(None,"QFileDialog.getOpenFileName()", "","Video Files (* avi);;Python Files (*.py)", options=options)
-    if fileName:
-        print(fileName)
+#    if fileName:
+#        print(fileName)
     return fileName
 
 def splitVideo(vidFileName, imageListInput, folderName):
@@ -59,7 +59,6 @@ def openVidFile():
 
     fileName = openFile() #openFile() opens file browser and returns name of selected video file
     directory = str(QFileDialog.getExistingDirectory(ui_MAIN.MyMainWindow(),"Select Folder to Store Frames")) # File dialog opens for user to create/selet a folder to store the frames extracted from video
-    print("directory is:", directory)
     splitVideo(fileName, image_list, directory) 
     path, dirs, files = next(os.walk(directory))
     file_count = len(files)
