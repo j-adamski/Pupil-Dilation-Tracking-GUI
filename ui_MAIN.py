@@ -7,14 +7,17 @@ from PyQt5.QtCore import *
 from PIL import Image
 import pyqtgraph as pg
 import numpy as np
+from numpy.linalg import eig, inv
 import upload
 from main import *
 import warnings
+import os
 from os.path import basename
 import kalmanFilter
 import ellipseFitting
 
-count = 1 #keeps track of the frame that is currently being displayed on the screen
+
+count = 0 #keeps track of the index of the frame that is currently being displayed on the screen
 global frames #number of frames, is updated after uploading video or selecting folder with frames
 image_list = [] #stores paths of all frames extracted from video
 radius_data = [] #radius data that is collected by fitting the ellipse on the frames, then this array is exported to csv file
@@ -30,6 +33,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.L_button.clicked.connect(self.on_clickLeft) # connecting L mouse button to on_clickLeft function
         self.R_button.clicked.connect(self.on_clickRight) # connecting R mouse button to on_clickRight function
         self.actionUpload_new.triggered.connect(self.FILEMENU_upload) # connecting upload button to FILEMENU_upload
+        self.actionOpen.triggered.connect(self.FILEMENU_open) # open existing frames
         self.horizontalSlider.sliderMoved.connect(self.sliderMoved) # when slider is moved, it will trigger sliderMoved function
         self.checkBox_UsePrevData.stateChanged.connect(self.checkBox) # when checkbox is checked or unchecked, the checkbox() function is triggered
         self.actionSave.triggered.connect(self.csv) #Saves as CSV file when save is clicked
@@ -55,6 +59,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 
     def sliderMoved(self, val): 
         global count
+        print("VAL IS",val)
         count = val
         self.update()
         
@@ -87,17 +92,33 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         global fps
         upload.openVidFile()
         self.update()
+        self.assignVarNames()
+
+            
+    def FILEMENU_open(self):
+        upload.openFrames()
+        self.update()
+        self.assignVarNames()
+        
+    # Assign variable names - originalImageDir, originalImageFolder
+    # Populate radius_data array with 0's based on num_of_frames (amount of frames)
+    def assignVarNames(self):
+        global originalImageDir
+        global originalImageFolder
+        global fps
         originalImageDir = image_list[0].rsplit('/',1)[0]
         originalImageFolder = originalImageDir.rsplit('/',1)[-1]
+        print("ORIGINAL IMAGE DIR", originalImageDir)
         
         num_of_frames = len(image_list) #total num of frames
     
         #populating array with 0's 
         for x in range(0,num_of_frames):    
             radius_data.append(0)
+            
+        self.video_title.setText(originalImageDir)
+        self.horizontalSlider.setRange(0,num_of_frames-1)
 
-
-  
 #- - - - - - - Displaying image on GUI and updating - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
     '''
     opens the frame and displays it onto the graphics view. The label and slider position are updated with the frame currently being viewed. 
@@ -108,16 +129,21 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         global maxCount
         global cir
         global img
+        print("COUNT FROM SLIDER",count)
         img = Image.open(image_list[count])
+        print("OPENED:", image_list[count])       
+        print("The current frame # is:", count+1)
+
         arr = np.array(img)
         arr = np.rot90(arr, -1)
         img_arr = pg.ImageItem(arr)
         self.graphicsView.addItem(img_arr)
         
-        self.label_frameNum.setText("Frame " + str(count))
-        self.horizontalSlider.setSliderPosition((count/len(image_list))*100) #setting the slider proportionate to the position of the current frame    
+        self.label_frameNum.setText("Frame " + str(count+1))
+        #self.horizontalSlider.setSliderPosition((count/len(image_list))*100) #setting the slider proportionate to the position of the current frame    
+        self.horizontalSlider.setSliderPosition(count)
 
-        if count in usePrevFrame:
+        if (count+1) in usePrevFrame:
              self.checkBox_UsePrevData.setChecked(True) 
         else:
             self.checkBox_UsePrevData.setChecked(False) 
@@ -160,105 +186,120 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         thresholdMultiplier = float(thresholdMultiplier)
         print("ThresholdMultiplier:",thresholdMultiplier)
         
+
+        output_folder = originalImageFolder + "_FRAMEOUTPUT"
+        output_directory = originalImageDir.rsplit('/',1)[0] # directory where the folder with output frames is stores - does not include folder name in the path
+        output_folder_path = output_directory + "/" + output_folder
+
         # If "circle.jpg" is not in the image name for the current frame, then call fitSingleFrame, else - get the original image w/o the circle drawn and fit the frame again
-        output_directory = originalImageFolder + "_FRAMEOUTPUT"
-        if 'circle.jpg' not in image_list[count]:
-            self.fitSingleFrame(image_list[count],count, output_directory, thresholdMultiplier)
-        else:
-            originalImagePath = originalImageDir + "/frame" + str(count) + ".jpg"
-            self.fitSingleFrame(originalImagePath, count, output_directory, thresholdMultiplier)
+        current_frame = count+1
     
-            
+        if 'circle.jpg' not in image_list[count]:
+            self.fitSingleFrame(image_list[count], count, output_folder_path, thresholdMultiplier)
+        else:
+            originalImagePath = originalImageDir + "/frame" + str(current_frame) + ".jpg"
+            print("ORIGINAL IMAGE PATH", originalImagePath)
+            self.fitSingleFrame(originalImagePath, count, output_folder_path, thresholdMultiplier)
+              
        
     '''
     Detection on a single frame using ellipse fitting
     '''
-    def fitSingleFrame(self, frame, frame_num, outputFolder, thresholdMultiplier):  
+    def fitSingleFrame(self, frame, frame_index, output_folder_path, thresholdMultiplier):  
         global frameName
         global outputName
         global phi
   
-        
+        frame_num = frame_index + 1
         #Setting output name and folder
         frameName = basename(frame)             
-        outputName = outputFolder + '/' + frameName.split('.')[0] + 'circle.jpg'        
-        
+        outputName = output_folder_path + '/' + frameName.split('.')[0] + 'circle.jpg'
+
         img=ellipseFitting.get_image_mat(frame)                
         threshold = img.mean(axis=0).mean()* thresholdMultiplier
         img = ellipseFitting.get_binary_image_mat(frame,threshold)
         
         ##########################################################
-        estimate_center = np.array(coordinates)
-        print("estimate_center:", estimate_center)
-        estimate_radius = 300
-
-        estimate_a = estimate_radius
-        estimate_b = estimate_radius
         
-        points = ellipseFitting.find_edge_points(estimate_center,estimate_radius,img)
-        a_points = np.array(points)
-        x = a_points[:, 0]
-        y = a_points[:, 1]
-
-        eye = ellipseFitting.fitEllipse(x,y)
-        center = ellipseFitting.ellipse_center(eye)
-               
-        if isinstance(center[0], complex):
-            center = estimate_center
-            r = estimate_radius
-            a = estimate_a
-            b = estimate_b  
-            
-        else:
-            phi = ellipseFitting.ellipse_angle_of_rotation2(eye)
-            axes = ellipseFitting.ellipse_axis_length(eye)
-            a, b = axes
-            area = np.pi*a*b
-            r = np.sqrt(a*b)
+        try:
+            estimate_center = np.array(coordinates)
+            print("estimate_center:", estimate_center)
+            estimate_radius = 300
     
+            estimate_a = estimate_radius
+            estimate_b = estimate_radius
+            
+            points = ellipseFitting.find_edge_points(estimate_center,estimate_radius,img)
+            a_points = np.array(points)
+            x = a_points[:, 0]
+            y = a_points[:, 1]
+    
+            eye = ellipseFitting.fitEllipse(x,y)
+            center = ellipseFitting.ellipse_center(eye)
+                   
+            if isinstance(center[0], complex):
+                center = estimate_center
+                r = estimate_radius
+                a = estimate_a
+                b = estimate_b  
+                
+            else:
+                phi = ellipseFitting.ellipse_angle_of_rotation2(eye)
+                axes = ellipseFitting.ellipse_axis_length(eye)
+                a, b = axes
+                area = np.pi*a*b
+                r = np.sqrt(a*b)
         
-        print ("center = ",  center)
-        print ("angle of rotation = ",  phi)
-        print ("axes = ", axes)
-        print ("area = ", area)
-        print ("radius = ", r)
+            
+            print ("center = ",  center)
+            print ("angle of rotation = ",  phi)
+            print ("axes = ", axes)
+            print ("area = ", area)
+            print ("radius = ", r)
+            
+            R = np.arange(0,2*np.pi, 0.01)
+            xx = center[0] + a*np.cos(R)*np.cos(phi) - b*np.sin(R)*np.sin(phi)
+            yy = center[1] + a*np.cos(R)*np.sin(phi) + b*np.sin(R)*np.cos(phi)
+     
         
-        R = np.arange(0,2*np.pi, 0.01)
-        xx = center[0] + a*np.cos(R)*np.cos(phi) - b*np.sin(R)*np.sin(phi)
-        yy = center[1] + a*np.cos(R)*np.sin(phi) + b*np.sin(R)*np.cos(phi)
         
-        
-        # Have to declare these global variables, otherwise they are not defined
-        global prev_radius
-        global prev_center
-        global prev_a
-        global prev_b
-        global prev_threshold
-        
-        # Use previous data if the frame is in the usePrevFrame array
-        if frame_num not in usePrevFrame:
-            prev_radius = r
-            prev_center = center
-            prev_a = a
-            prev_b = b
-            prev_threshold = threshold
-        else: 
-            r = prev_radius
-            center = prev_center
-            a = prev_a
-            b = prev_b
-            threshold = prev_threshold
-             
-        
-        show_circle_img = ellipseFitting.get_image_mat(frame)
-        ellipseFitting.add_circle(show_circle_img,center,r,255)
-
-        radius_data[frame_num-1] = r
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            ellipseFitting.save_image(show_circle_img,center,r,a,b,phi,outputName) 
-
-        self.updateCircleImage(outputName, frame_num)
+            # Have to declare these global variables, otherwise they are not defined
+            global prev_radius
+            global prev_center
+            global prev_a
+            global prev_b
+            global prev_threshold
+            
+            
+            # Use previous data if the frame is in the usePrevFrame array
+            if frame_num not in usePrevFrame:
+                prev_radius = r
+                prev_center = center
+                prev_a = a
+                prev_b = b
+                prev_threshold = threshold
+            else: 
+                r = prev_radius
+                center = prev_center
+                a = prev_a
+                b = prev_b
+                threshold = prev_threshold
+                 
+            
+            show_circle_img = ellipseFitting.get_image_mat(frame)
+            ellipseFitting.add_circle(show_circle_img,center,r,255)
+    
+            radius_data[frame_index] = r
+            
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                ellipseFitting.save_image(show_circle_img,center,r,a,b,phi,outputName) 
+    
+           
+            self.updateCircleImage(outputName, frame_index)
+            
+        except:
+            print("ERROR - could not detect ellipse - try again")
       
                     
     # Updates the image on graphicsView with new circle drawn
@@ -273,8 +314,9 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     '''
     For fitting a range of frames, the range is specified in the text box with a dash (EX: frames one to five --->   1-5)
     '''
-    def fitFrameRange(self):
-        output_directory = originalImageFolder + "_FRAMEOUTPUT"
+    def fitFrameRange(self):        
+        output_folder = originalImageFolder + "_FRAMEOUTPUT"
+        output_folder_path = output_directory + "/" + output_folder
         
         thresholdMultiplier = self.threshold_box.text()
         thresholdMultiplier = float(thresholdMultiplier)
@@ -289,23 +331,25 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
         rangeLen = stop - start
         for i in range(start,stop+1):
-            if 'circle.jpg' not in image_list[count]:
-                self.fitSingleFrame(image_list[i], i, output_directory, thresholdMultiplier)
+            if 'circle.jpg' not in image_list[i-1]:
+                self.fitSingleFrame(image_list[i-1], i-1, output_folder_path, thresholdMultiplier)
             #    print(i/rangeLen)
                 
             else:
                 print("COUNT IS:", i)
-                originalImagePath = originalImageDir + "/frame" + str(i) + ".jpg"
-                self.fitSingleFrame(originalImagePath, i, output_directory, thresholdMultiplier)
+                print("image_list[count]", image_list[count])
+                originalImagePath = originalImageDir + "/frame" + str(i+1) + ".jpg"
+                self.fitSingleFrame(originalImagePath, i, output_folder_path, thresholdMultiplier)
                 self.progressBar.setProperty("value", (i/rangeLen)*100)
             
     # If the check box is checked, then the current count is added to array "usePrevFrame" and removed if the checkbox is unchecked
     # The purpose of the checkbox being checked is to use data from the previous frame in case of a blink or faulty detection    
     def checkBox(self):
+        current_frame = count+1
         if self.checkBox_UsePrevData.isChecked() == True:
-            usePrevFrame.append(count)
-        if self.checkBox_UsePrevData.isChecked() == False and count in usePrevFrame:
-            usePrevFrame.remove(count)
+            usePrevFrame.append(current_frame)
+        if self.checkBox_UsePrevData.isChecked() == False and current_frame in usePrevFrame:
+            usePrevFrame.remove(current_frame)
     
 
 def main():
