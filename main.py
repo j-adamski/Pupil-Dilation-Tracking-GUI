@@ -250,7 +250,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Pupil Dilation Tracker"))
-        self.video_title.setText(_translate("MainWindow", "No video uploaded"))
+        self.video_title.setText(_translate("MainWindow", "Click FILE to upload frames"))
         self.label_frameNum.setText(_translate("MainWindow", "No frames to display"))
         self.L_button.setText(_translate("MainWindow", "🡰"))
         self.R_button.setText(_translate("MainWindow", "🡲"))
@@ -264,7 +264,7 @@ class Ui_MainWindow(object):
        
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.actionUpload_new.setText(_translate("MainWindow", "Upload new"))
-        self.actionOpen.setText(_translate("MainWindow", "Open"))
+        self.actionOpen.setText(_translate("MainWindow", "Open frames"))
         self.actionSave.setText(_translate("MainWindow", "Save"))
         self.actionKalman.setText(_translate("MainWindow", "Apply Kalman Filter"))
         
