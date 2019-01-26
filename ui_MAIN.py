@@ -71,7 +71,6 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 
     def sliderMoved(self, val): 
         global count
-        print("VAL IS",val)
         count = val
         self.update()
         
@@ -117,10 +116,9 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def assignVarNames(self):
         global originalImageDir
         global originalImageFolder
-        global fps
-        originalImageDir = image_list[0].rsplit('/',1)[0]
-        originalImageFolder = originalImageDir.rsplit('/',1)[-1]
-        print("ORIGINAL IMAGE DIR", originalImageDir)
+        global num_of_frames
+        originalImageDir = image_list[0].rsplit('/',1)[0]  # Directory that holds frames
+        originalImageFolder = originalImageDir.rsplit('/',1)[-1] # Folder that holds frames
         
         num_of_frames = len(image_list) #total num of frames
     
@@ -141,17 +139,16 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         global maxCount
         global cir
         global img
-        print("COUNT FROM SLIDER",count)
         img = Image.open(image_list[count])
-        print("OPENED:", image_list[count])       
-        print("The current frame # is:", count+1)
+      #  print("OPENED:", image_list[count])       
+      #  print("The current frame # is:", count+1)
 
         arr = np.array(img)
         arr = np.rot90(arr, -1)
         img_arr = pg.ImageItem(arr)
         self.graphicsView.addItem(img_arr)
         
-        self.label_frameNum.setText("Frame " + str(count+1))
+        self.label_frameNum.setText("Frame " + str(count+1) + "/" + str(len(image_list)))
         #self.horizontalSlider.setSliderPosition((count/len(image_list))*100) #setting the slider proportionate to the position of the current frame    
         self.horizontalSlider.setSliderPosition(count)
 
@@ -168,9 +165,9 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             csv_file = originalImageFolder + "_DATA.csv"
             csv_path = originalImageDir.rsplit('/',1)[0] + "/" + csv_file
             ellipseFitting.export_to_csv(radius_data, csv_path)
-            print("radius_data saved to CSV as", csv_file, "at", csv_path)
+            print("\n", csv_file, "saved at", csv_path)
         except:
-            self.showdialog("Cannot save to CSV", " ", "ERROR", "The details are as follows:\n If your CSV file is open in your computer, close it and try again. This causes the permissions for accessing and editing it to be denied.")
+            self.showdialog("Cannot save to CSV", "", "ERROR", "The details are as follows:\n If your CSV file is open in your computer, close it and try again. This causes the permissions for accessing and editing it to be denied.")
                         
         
     '''
@@ -180,12 +177,11 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def applyKalman(self):
         csv_file = originalImageFolder + "_DATA.csv"
         csv_path = originalImageDir.rsplit('/',1)[0] + "/" + csv_file
-        print("CSV_FILE", csv_path)
         if not os.path.isfile(csv_path):
             self.csv()        
         kalman_file = originalImageDir.rsplit('/',1)[0] + "/" + originalImageFolder + "_KALMANFILTER.csv"
-        kalmanFilter.applyKalmanFilter(csv_file, kalman_file)
-        print("fone")
+        kalmanFilter.applyKalmanFilter(csv_path, kalman_file)
+        print("\nKalman filter applied to", csv_file, "and saved at", kalman_file)
 
 
 #- - - - - - Ellipse Fitting - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
@@ -202,8 +198,8 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         cor = img_arr.mapFromScene(event.scenePos()) #maps coordinate from image pixels
         x = int(cor.x())
         y = int(cor.y())
-        coordinates = [y,x] #Axis of image is flipped for some reason
-        print("Center click:", coordinates, "**Axis flipped for img**")
+        coordinates = [x,y] #Axis of image is flipped for some reason
+        print("Center click:", [x,y]) # coordinates flipped due to image array
          
         thresholdMultiplier = self.threshold_box.text()
         thresholdMultiplier = float(thresholdMultiplier)
@@ -221,7 +217,6 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.fitSingleFrame(image_list[count], count, output_folder_path, thresholdMultiplier)
         else:
             originalImagePath = originalImageDir + "/frame" + str(current_frame) + ".jpg"
-            print("ORIGINAL IMAGE PATH", originalImagePath)
             self.fitSingleFrame(originalImagePath, count, output_folder_path, thresholdMultiplier)
               
        
@@ -234,6 +229,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         global phi
   
         frame_num = frame_index + 1
+        print("FITTING ELLIPSE: frame", frame_num)
         #Setting output name and folder
         frameName = basename(frame)             
         outputName = output_folder_path + '/' + frameName.split('.')[0] + 'circle.jpg'
@@ -246,7 +242,6 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         
         try:
             estimate_center = np.array(coordinates)
-            print("estimate_center:", estimate_center)
             estimate_radius = 300
     
             estimate_a = estimate_radius
@@ -273,12 +268,13 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 area = np.pi*a*b
                 r = np.sqrt(a*b)
         
-            
+            '''
             print ("center = ",  center)
             print ("angle of rotation = ",  phi)
             print ("axes = ", axes)
             print ("area = ", area)
             print ("radius = ", r)
+            '''
             
             R = np.arange(0,2*np.pi, 0.01)
             xx = center[0] + a*np.cos(R)*np.cos(phi) - b*np.sin(R)*np.sin(phi)
@@ -322,7 +318,10 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.updateCircleImage(outputName, frame_index)
             
         except:
-            print("ERROR - could not detect ellipse - try again")
+            print("- - - - - - - - - - - - - - - - - - ")
+            print("FRAME", frame_index + 1, "ERROR")
+            print("Could not detect ellipse - try again")
+            print("- - - - - - - - - - - - - - - - - - ")
       
                     
     # Updates the image on graphicsView with new circle drawn
@@ -342,29 +341,38 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         output_folder_path = output_directory + "/" + output_folder
         
         thresholdMultiplier = self.threshold_box.text()
-        thresholdMultiplier = float(thresholdMultiplier)
-        print("ThresholdMultiplier:",thresholdMultiplier)
-        
-        customRange = self.custom_range_box.text()
-        customRange = customRange.split('-')
-        
-        start = int(customRange[0])
-        stop = int(customRange[1])
-        
-        
-        rangeLen = stop - start
-        for i in range(start,stop+1):
-            if 'circle.jpg' not in image_list[i-1]:
-                self.fitSingleFrame(image_list[i-1], i-1, output_folder_path, thresholdMultiplier)
-            #    print(i/rangeLen)
-                
-            else:
-                print("COUNT IS:", i)
-                print("image_list[count]", image_list[count])
-                originalImagePath = originalImageDir + "/frame" + str(i+1) + ".jpg"
-                self.fitSingleFrame(originalImagePath, i, output_folder_path, thresholdMultiplier)
-                self.progressBar.setProperty("value", (i/rangeLen)*100)
+        try:
+            thresholdMultiplier = float(thresholdMultiplier)
+            print("ThresholdMultiplier:",thresholdMultiplier)
             
+            customRange = self.custom_range_box.text()
+            customRange = customRange.split('-')
+            
+            start = int(customRange[0])
+            stop = int(customRange[1]) 
+        except:
+            self.showdialog("Invalid entry in frame range box. Try again.","TIP: For frames 1 through 10, enter '1-10' in the box ", "WARNING", "The frame range includes the numbers in the range. For example, 1-4 will apply the ellipse fitting to frames 1, 2, 3, and 4.")
+             
+        if stop > num_of_frames:
+             self.showdialog("Error occured with fitting range. Try again.", "Make sure the frame range does not exceed the number of frames", "WARNING", "Double check the frame range. This error occurs when the frame range is greater than the amount of frames.")
+        else:
+        
+            try:
+                rangeLen = stop - start
+                for i in range(start,stop):
+                    if 'circle.jpg' not in image_list[i-1]:
+                        self.fitSingleFrame(image_list[i-1], i-1, output_folder_path, thresholdMultiplier)
+                    #    print(i/rangeLen)
+                        
+                    else:
+                        print("image_list[count]", image_list[count])
+                        originalImagePath = originalImageDir + "/frame" + str(i+1) + ".jpg"
+                        self.fitSingleFrame(originalImagePath, i, output_folder_path, thresholdMultiplier)
+                        self.progressBar.setProperty("value", (i/rangeLen)*100)
+            except:
+                 self.showdialog("Unknown error occured", "Try again", "WARNING", "")
+            self.progressBar.setProperty("value", 0)
+                    
     # If the check box is checked, then the current count is added to array "usePrevFrame" and removed if the checkbox is unchecked
     # The purpose of the checkbox being checked is to use data from the previous frame in case of a blink or faulty detection    
     def checkBox(self):
