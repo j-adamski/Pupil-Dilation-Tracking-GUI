@@ -73,4 +73,3 @@ def applyKalmanFilter(csv_file, kalman_file):
         writer = csv.writer(csvfile, lineterminator = '\n', delimiter=' ')
         for num in x_smooth:
             writer.writerow([num])
-        writer.close()
