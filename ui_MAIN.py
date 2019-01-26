@@ -42,6 +42,18 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.start_push_button.clicked.connect(self.fitFrameRange) # when clicking start button, fitFrameRange() is called - which fits the range that is specified in the box
 
         
+    # Popup dialog box with info regarding errors
+    def showdialog(self, text, informativetext, windowtitle, detailedtext):
+       msg = QMessageBox()
+       msg.setIcon(QMessageBox.Information)
+       msg.setText(text)
+       msg.setInformativeText(informativetext)
+       msg.setWindowTitle(windowtitle)
+       msg.setDetailedText(detailedtext)
+       msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+       retval = msg.exec_()
+     #  print("value of pressed message box button:", retval)    
+            
 # - - - - - - - - Keyboard/Click Events - - - - - - - - - - - - - - - - - - - - - - - - - - #
 # Events for left click, right click, if the slider is moved, and if certain keys are pressed
         
@@ -152,9 +164,14 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     Saving to csv file with the original folder name that the frame images were stored in with _DATA added to the name 
     '''
     def csv(self):
-        csv_file = originalImageFolder + "_DATA.csv"
-        ellipseFitting.export_to_csv(radius_data,csv_file)
-        print("radius_data saved to CSV as", csv_file)
+        try:
+            csv_file = originalImageFolder + "_DATA.csv"
+            csv_path = originalImageDir.rsplit('/',1)[0] + "/" + csv_file
+            ellipseFitting.export_to_csv(radius_data, csv_path)
+            print("radius_data saved to CSV as", csv_file, "at", csv_path)
+        except:
+            self.showdialog("Cannot save to CSV", " ", "ERROR", "The details are as follows:\n If your CSV file is open in your computer, close it and try again. This causes the permissions for accessing and editing it to be denied.")
+                        
         
     '''
     Applies Kalman filter to the csv file - which must be created first
@@ -162,7 +179,13 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     '''        
     def applyKalman(self):
         csv_file = originalImageFolder + "_DATA.csv"
-        kalmanFilter.applyKalmanFilter(csv_file, originalImageFolder)
+        csv_path = originalImageDir.rsplit('/',1)[0] + "/" + csv_file
+        print("CSV_FILE", csv_path)
+        if not os.path.isfile(csv_path):
+            self.csv()        
+        kalman_file = originalImageDir.rsplit('/',1)[0] + "/" + originalImageFolder + "_KALMANFILTER.csv"
+        kalmanFilter.applyKalmanFilter(csv_file, kalman_file)
+        print("fone")
 
 
 #- - - - - - Ellipse Fitting - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
