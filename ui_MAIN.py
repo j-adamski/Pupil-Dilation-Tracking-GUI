@@ -161,13 +161,16 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     Saving to csv file with the original folder name that the frame images were stored in with _DATA added to the name 
     '''
     def csv(self):
-        try:
-            csv_file = originalImageFolder + "_DATA.csv"
-            csv_path = originalImageDir.rsplit('/',1)[0] + "/" + csv_file
-            ellipseFitting.export_to_csv(radius_data, csv_path)
-            print("\n", csv_file, "saved at", csv_path)
-        except:
-            self.showdialog("Cannot save to CSV", "", "ERROR", "The details are as follows:\n If your CSV file is open in your computer, close it and try again. This causes the permissions for accessing and editing it to be denied.")
+        #try:
+        csv_file = originalImageFolder + "_DATA.csv"
+        csv_path = originalImageDir.rsplit('/',1)[0] + "/" + csv_file
+        ellipseFitting.export_to_csv(radius_data, csv_path)
+        radius_data[:] = []
+        for i in range(num_of_frames):
+            radius_data.append(0)
+        print("\n", csv_file, "saved at", csv_path)
+        #except:
+        #    self.showdialog("Cannot save to CSV", "", "ERROR", "The details are as follows:\n If your CSV file is open in your computer, close it and try again. This causes the permissions for accessing and editing it to be denied.")
                         
         
     '''

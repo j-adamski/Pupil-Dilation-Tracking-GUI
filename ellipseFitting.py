@@ -5,7 +5,7 @@ import numpy as np
 import csv
 import warnings
 from numpy.linalg import eig, inv
-
+import os.path
 
 def createLineIterator(P1, P2, img):
     """
@@ -235,14 +235,46 @@ def save_image(img, center, radius, a, b, phi, file_name, lum = 255):
     imageio.imwrite(file_name, show_circle_img.transpose())
     return
 
-# Adds 1st column with frame number, 2nd column with data
+
 
 def export_to_csv(radius_data, csv_file):
+
+
+    '''
     with open (csv_file, 'w') as csvfile:
         writer = csv.writer(csvfile, lineterminator = '\n', delimiter=',')
         for i in range(len(radius_data)):
             writer.writerows(zip([i+1],[radius_data[i]]))
     return
+    
+    '''
+    csv_data = [] # list which contents of csv file will be appended to
+    if os.path.isfile(csv_file):
+        with open(csv_file, 'r') as csvfile:
+            csv_reader = csv.reader(csvfile)
+        
+            for row in csv_reader:
+                csv_data.append(float(row[1]))
+        
+        # Replaces data in csv list with new data
+        index = 0
+        for elem in radius_data:
+            if elem != 0:
+                csv_data[index] = radius_data[index]
+            index +=1
+    else:
+        csv_data = radius_data
+    
+    # Writes new data to file
+    with open (csv_file, 'w') as csvfile:
+        writer = csv.writer(csvfile, lineterminator = '\n', delimiter=',')
+        for i in range(len(csv_data)):
+            writer.writerows(zip([i+1],[csv_data[i]]))
+    return
+
+
+# Adds 1st column with frame number, 2nd column with data
+
 
 
 '''
