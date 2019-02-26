@@ -6,6 +6,7 @@ import csv
 import warnings
 from numpy.linalg import eig, inv
 import os.path
+from memory_profiler import profile
 
 def createLineIterator(P1, P2, img):
     """
@@ -187,19 +188,24 @@ def image_thresholding(img,threshold):
     img[idx2] = 0
 #    img[idx3] = 0
     return img
-    
+
+
 def get_image_mat(filename):
     img = Image.open(filename).convert('LA')
     #img = img.resize((120, 100), Image.ANTIALIAS)
-    img = np.asarray(img, 'double').transpose()  
-    img = img[0,:,:] # just one layer
+    img_as_arr = np.asarray(img,'double').T #.transpose()
+    img.close()
+    img = img_as_arr[0,:,:] # just one layer
+    del img_as_arr
     return img
+
 
 def get_binary_image_mat(filename,threshold):
     img = Image.open(filename).convert('LA')
     #img = img.resize((120, 100), Image.ANTIALIAS)
-    img = np.asarray(img, 'double').transpose()  
-    img = img[0,:,:] # just one layer
+    imgg = np.asarray(img, 'double').transpose()
+    img.close()
+    img = imgg[0,:,:] # just one layer
     img = image_thresholding(img,threshold)
     return img
 

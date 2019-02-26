@@ -15,9 +15,11 @@ import os
 from os.path import basename
 import kalmanFilter
 import ellipseFitting
+import gc
+from memory_profiler import profile
 
 
-count = 0 #keeps track of the index of the frame that is currently being displayed on the screen
+count = 0 #keeps track of the inpipdex of the frame that is currently being displayed on the screen
 global frames #number of frames, is updated after uploading video or selecting folder with frames
 image_list = [] #stores paths of all frames extracted from video
 radius_data = [] #radius data that is collected by fitting the ellipse on the frames, then this array is exported to csv file
@@ -134,11 +136,20 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     opens the frame and displays it onto the graphics view. The label and slider position are updated with the frame currently being viewed. 
     The checkbox also checks or unchecks depending on if that frame has been added to the UsePrevData array.
     '''
+
     def update(self):
         global img_arr
         global maxCount
         global cir
         global img
+        try:
+            img.close()
+            print(img, "closed")
+            self.graphicsView.removeItem(img_arr)
+            del img
+            del img_arr
+        except:
+            pass
         img = Image.open(image_list[count])
       #  print("OPENED:", image_list[count])       
       #  print("The current frame # is:", count+1)
@@ -155,22 +166,27 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if (count+1) in usePrevFrame:
              self.checkBox_UsePrevData.setChecked(True) 
         else:
-            self.checkBox_UsePrevData.setChecked(False) 
- 
+            self.checkBox_UsePrevData.setChecked(False)
+
+        gc.collect()
     '''
     Saving to csv file with the original folder name that the frame images were stored in with _DATA added to the name 
     '''
     def csv(self):
-        #try:
-        csv_file = originalImageFolder + "_DATA.csv"
-        csv_path = originalImageDir.rsplit('/',1)[0] + "/" + csv_file
-        ellipseFitting.export_to_csv(radius_data, csv_path)
-        radius_data[:] = []
-        for i in range(num_of_frames):
-            radius_data.append(0)
-        print("\n", csv_file, "saved at", csv_path)
-        #except:
-        #    self.showdialog("Cannot save to CSV", "", "ERROR", "The details are as follows:\n If your CSV file is open in your computer, close it and try again. This causes the permissions for accessing and editing it to be denied.")
+        try:
+            csv_file = originalImageFolder + "_DATA.csv"
+            csv_path = originalImageDir.rsplit('/',1)[0] + "/" + csv_file
+            print("RADIUSDATA", radius_data)
+            ellipseFitting.export_to_csv(radius_data, csv_path)
+            radius_data[:] = []
+            for i in range(num_of_frames):
+                radius_data.append(0)
+            print(radius_data)
+            print("\n", csv_file, "saved at", csv_path)
+            gc.collect()
+
+        except:
+            self.showdialog("Cannot save to CSV", "", "ERROR", "The details are as follows:\n If your CSV file is open in your computer, close it and try again. This causes the permissions for accessing and editing it to be denied.")
                         
         
     '''
@@ -226,7 +242,9 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     '''
     Detection on a single frame using ellipse fitting
     '''
-    def fitSingleFrame(self, frame, frame_index, output_folder_path, thresholdMultiplier):  
+
+
+    def fitSingleFrame(self, frame, frame_index, output_folder_path, thresholdMultiplier):
         global frameName
         global outputName
         global phi
@@ -328,7 +346,15 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
       
                     
     # Updates the image on graphicsView with new circle drawn
-    def updateCircleImage(self,output_frame, frame_num):                   
+    @profile
+    def updateCircleImage(self,output_frame, frame_num):
+        global updateImg
+        try:
+            updateImg.close()
+            print("updateImg Closed", img)
+        except:
+            pass
+
         updateImg = Image.open(output_frame)
         ar = np.array(updateImg)
         ar = np.rot90(ar, -1)
