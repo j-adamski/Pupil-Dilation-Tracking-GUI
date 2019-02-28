@@ -1,4 +1,4 @@
-name: py37
+name: pupil
 channels:
   - conda-forge
   - anaconda-fusion
@@ -284,4 +284,3 @@ dependencies:
     - urwid==2.0.1
     - valuedispatch==0.0.1
 prefix: C:\Users\Julia\Anaconda3\envs\py37
-
