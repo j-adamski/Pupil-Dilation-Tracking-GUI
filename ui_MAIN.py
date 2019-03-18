@@ -16,7 +16,7 @@ from os.path import basename
 import kalmanFilter
 import ellipseFitting
 import gc
-from memory_profiler import profile
+#from memory_profiler import profile
 
 
 count = 0 #keeps track of the inpipdex of the frame that is currently being displayed on the screen
@@ -346,7 +346,7 @@ class MyMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
       
                     
     # Updates the image on graphicsView with new circle drawn
-    @profile
+ #   @profile
     def updateCircleImage(self,output_frame, frame_num):
         global updateImg
         try:
